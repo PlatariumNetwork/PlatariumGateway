@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Pending transactions folder
+pendingTransactions/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env

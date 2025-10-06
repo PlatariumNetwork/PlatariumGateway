@@ -1,0 +1,18 @@
+{
+  "name": "platariumgateway",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "express": "^5.1.0",
+    "futoin-hkdf": "^1.5.3",
+    "platarium-network": "^1.0.9"
+  }
+}
