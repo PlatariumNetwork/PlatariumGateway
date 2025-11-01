@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Platarium Network Status</title>
+<meta name="description" content="Monitor Platarium blockchain network and RPC node status in real-time.">
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    background-color: #000;
+    color: #fff;
+    font-family: "Courier New", Courier, monospace;
+    display: flex;
+    flex-direction: column;
+  }
+  .header {
+    padding: 20px;
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  .status, .sockets {
+    padding: 20px;
+    white-space: pre-line;
+  }
+  .ok {
+    color: #00ff00;
+  }
+  .error {
+    color: #ff4c4c;
+  }
+</style>
+</head>
+<body>
+  <div class="header">Platarium Network Status</div>
+  <div class="status" id="status">Loading network status...</div>
+  <div class="sockets" id="sockets">Loading sockets info...</div>
+
+  <script>
+    const STATUS_URL = "/rpc/status";  
+    const SOCKETS_URL = "/rpc/sockets";  
+
+    const statusEl = document.getElementById("status");
+    const socketsEl = document.getElementById("sockets");
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch(STATUS_URL);
+        if (!res.ok) throw new Error("Network response not OK");
+        const data = await res.json();
+        const colorClass = data.status === "ok" ? "ok" : "error";
+        statusEl.innerHTML = 
+          `Network: <span class="${colorClass}">${data.network}</span>\n` +
+          `RPC Server Status: <span class="${colorClass}">${data.status.toUpperCase()}</span>\n` +
+          `Timestamp: ${new Date(data.timestamp).toLocaleString()}`;
+      } catch (err) {
+        statusEl.innerHTML = `RPC Server Status: <span class="error">ERROR</span>\n${err.message}`;
+      }
+    }
+
+    async function fetchSockets() {
+      try {
+        const res = await fetch(SOCKETS_URL);
+        if (!res.ok) throw new Error("Network response not OK");
+        const data = await res.json();
+        socketsEl.innerHTML =
+          `ID: ${data.nodeId}\n` +
+          `Address: ${data.nodeAddress}\n` +
+          `Connected Clients: ${data.summary.connectedClients}\n` +
+          `Connected Peers: ${data.summary.connectedPeers}\n` +
+          `Sockets List:\n` + 
+          (data.connectedSockets.length > 0 
+            ? data.connectedSockets.map(s => ` - ${s.socketId} (${s.ipAddress})`).join("\n")
+            : "No connected clients");
+      } catch (err) {
+        socketsEl.innerHTML = `Error fetching sockets info:\n${err.message}`;
+      }
+    }
+
+    async function update() {
+      await fetchStatus();
+      await fetchSockets();
+    }
+
+    update();
+    setInterval(update, 10000);
+  </script>
+</body>
+</html>

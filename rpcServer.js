@@ -39,21 +39,33 @@ async function startServer() {
   console.log("[Logging activated]");
   console.log(`Starting Platarium Gateway on REST:${PORT_REST}, WS:${PORT_WS}`);
 
+  // --- Blockchain ---
   const blockchain = new Blockchain();
   await blockchain.init();
   console.log("Blockchain initialized for REST API");
 
-  const nodeHost = process.env.NODE_HOST || getLocalIP();
+  const nodeHost = "rpc-melancholy-testnet.platarium.network";
   const nodesManager = new NodesManager(PORT_WS, nodeHost);
 
+  // --- Express app ---
   const app = express();
   app.use(bodyParser.json());
 
+  // Optional CORS headers
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    next();
+  });
+
+  // --- Routes ---
   balanceRoute(app, blockchain);
   transactionRoute(app, blockchain);
   transactionsRoute(app, blockchain);
   sendTransactionRoute(app, blockchain, nodesManager);
 
+  // Root route
   app.get("/", (req, res) => {
     res.json({
       message: "PlatariumGateway v1.0.0 is running with platarium-network",
@@ -63,6 +75,7 @@ async function startServer() {
     });
   });
 
+  // Network info
   app.get("/network", (req, res) => {
     res.json({
       nodeId: nodesManager.getNodeId(),
@@ -71,11 +84,22 @@ async function startServer() {
     });
   });
 
+  // Status endpoint
+  app.get("/status", (req, res) => {
+    res.status(200).json({ 
+      status: "ok", 
+      timestamp: Date.now(),
+      network: "Melancholy Testnet"
+    });
+  });
+
+  // --- WebSocket ---
   const { broadcastEvent, getConnectedSockets } = await createSocketServer(PORT_WS, blockchain, nodesManager);
   global.broadcastEvent = broadcastEvent;
   global.nodesManager = nodesManager;
   global.getConnectedSockets = getConnectedSockets;
 
+  // Sockets overview
   app.get("/sockets", async (req, res) => {
     await nodesManager.queryPeerSockets();
     res.json({
@@ -89,16 +113,19 @@ async function startServer() {
     });
   });
 
+  // --- Start server ---
   app.listen(PORT_REST, () => {
     console.log(`REST API running at http://localhost:${PORT_REST}`);
   });
 
+  // Connect to peers after small delay
   setTimeout(async () => {
     console.log("[NODE] Connecting to peer nodes...");
     await nodesManager.connectToPeers();
   }, 1000);
 }
 
+// Start the server
 startServer().catch(err => {
   console.error("Error starting server:", err);
 });
