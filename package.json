@@ -13,6 +13,9 @@
   "dependencies": {
     "express": "^5.1.0",
     "futoin-hkdf": "^1.5.3",
-    "platarium-network": "^1.0.9"
+    "platarium-network": "^1.0.9",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "uuid": "^13.0.0"
   }
 }
